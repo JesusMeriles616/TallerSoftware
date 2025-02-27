@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard en Tiempo Real</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    
+    <h1>Estadísticas generales jugador: ID {{ id_player }}</h1>
+    
+    <!-- Displaying the first graphic (Overall games) -->
+    <div id="grafico" style="width:100%;height:100%;"></div>
+    <div id="empty-message-overall" style="display:none; color: red;">No hay datos disponibles para mostrar en el gráfico.</div>
+    <hr>
+
+    <!-- Difficulty Level ComboBox -->
+    <label for="difficulty">Seleccionar Dificultad:</label>
+    <select id="difficulty" onchange="graficoDificultad()">
+        <option value="Fácil">Fácil</option>
+        <option value="Medio">Medio</option>
+        <option value="Difícil">Difícil</option>
+    </select>
+
+    <!-- Message for selected difficulty -->
+    <div id="difficulty-message" style="margin-top: 10px; font-weight: bold;"></div>
+
+    <!-- No graph message -->
+    <div id="no-graph-message" style="display:none; color: red;">No gráfico disponible para esta dificultad.</div>
+
+    <!-- Displaying the second graphic (Difficulty games) -->
+    <div id="grafico-difficulty" style="width:100%;height:500;"></div>
+    <div id="empty-message-difficulty" style="display:none; color: red;">No hay datos disponibles para mostrar en el gráfico.</div>
+    <hr>
+    <!-- Displaying the scatter plot graphic -->
+    <h2>Gráfico de Puntuaciones de Juegos</h2>
+    <div id="grafico-scatter" style="width:100%;height:400px;"></div>
+    <div id="empty-message-scatter" style="display:none; color: red;">No hay datos disponibles para mostrar en el gráfico de dispersión.</div>
+
+    <script>
+        // Function to update the first graph (Overall games)
+        function actualizarGrafico() {
+            $.getJSON(`/datos_grafico?id_player={{ id_player }}`, function(data) {
+                var grafico = document.getElementById('grafico');
+                // Check if data is empty
+                if (data && data.data && data.data.length === 0) {
+                    document.getElementById('empty-message-overall').style.display = 'block';
+                    Plotly.purge(grafico);  // Clear the graph
+                } else {
+                    document.getElementById('empty-message-overall').style.display = 'none';
+                    Plotly.react(grafico, JSON.parse(data).data, JSON.parse(data).layout);
+                }
+            }).fail(function() {
+                document.getElementById('empty-message-overall').style.display = 'block';
+                Plotly.purge(grafico);  // Clear the graph
+            });
+        }
+
+        // Function to update the second graph (Games by difficulty)
+        function graficoDificultad() {
+            var difficulty = document.getElementById('difficulty').value;
+            document.getElementById('difficulty-message').textContent = `Dificultad seleccionada: ${difficulty}`;
+            var grafico = document.getElementById('grafico-difficulty');
+            Plotly.purge(grafico);
+            document.getElementById('no-graph-message').style.display = 'none';
+
+            $.getJSON(`/datos_grafico_dificultad?id_player={{ id_player }}&difficulty=${difficulty}`, function(data) {
+                if (data && data.data && data.data.length === 0) {
+                    document.getElementById('no-graph-message').style.display = 'block';
+                } else {
+                    document.getElementById('no-graph-message').style.display = 'none';
+                    Plotly.react(grafico, JSON.parse(data).data, JSON.parse(data).layout);
+                }
+            }).fail(function() {
+                document.getElementById('no-graph-message').style.display = 'block';
+            });
+        }
+
+        // Function to update the scatter plot graph
+        function actualizarGraficoScatter() {
+        $.getJSON(`/datos_grafico_scatter?id_player={{ id_player }}`, function(data) {
+            var graficoScatter = document.getElementById('grafico-scatter');
+            // Check if data is empty
+            if (data && data.data && data.data.length === 0) {
+                document.getElementById('empty-message-scatter').style.display = 'block';
+                Plotly.purge(graficoScatter);  // Clear the graph
+            } else {
+                document.getElementById('empty-message-scatter').style.display = 'none';
+                Plotly.react(graficoScatter, JSON.parse(data).data, JSON.parse(data).layout);
+
+                // Add click event listener
+                graficoScatter.on('plotly_click', function(data) {
+                    var point = data.points[0]; // Get the first point clicked
+                    var score = point.y; // The score
+                    var date = point.x; // The date
+                    var difficulty = point.text; // The difficulty
+
+                    var idGame = point.customdata; // Access id_game
+                    // Redirect to another view and pass id_game
+                    window.location.href = `/color?id_game=${idGame}`;
+                });
+            }
+        }).fail(function() {
+            document.getElementById('empty-message-scatter').style.display = 'block';
+            Plotly.purge(graficoScatter);  // Clear the graph
+        });
+    }
+
+
+        // Initialize all graphs
+        actualizarGrafico();
+        graficoDificultad();
+        actualizarGraficoScatter();  // Call this function to update the scatter plot
+
+        // Optionally, update the first graph every 2 seconds (for real-time data)
+        setInterval(actualizarGrafico, 2000);
+        setInterval(actualizarGraficoScatter, 2000);  // Update scatter plot as well
+    </script>
+</body>
+</html>

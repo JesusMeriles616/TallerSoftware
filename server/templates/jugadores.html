@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jugadores</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Lista de Jugadores</h1>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Fecha creación</th>
+                    <th>Juegos</th>
+                    <th>Modificar</th>
+                    <th>Borrar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for jugador in jugadores %}
+                <tr>
+                    <td>{{ jugador[0] }}</td>
+                    <td>{{ jugador[1] }}</td>
+                    <td>{{ jugador[3] }}</td>
+                    <th>
+                        <a href="{{ url_for('juegos_bp.juegos', id_player=jugador[0]) }}" class="btn btn-primary">
+                            Juegos
+                        </a>
+                    </th>
+                    <td>
+                        <button class="btn btn-secondary" data-toggle="modal" data-target="#updatePlayerModal" 
+                        data-id="{{ jugador[0] }}" data-nombre="{{ jugador[1] }}">
+                          Modificar
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn btn-danger" data-toggle="modal" data-target="#confirmDeleteModal" data-id="{{ jugador[0] }}">
+                            Borrar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Total count of players -->
+        <p class="text-right"><strong>Total de jugadores:</strong> {{ jugadores|length }}</p>
+        
+        <a href="{{ url_for('index') }}" class="btn btn-primary" data-toggle="modal" data-target="#addPlayerModal">Agregar</a>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">Volver</a>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteLabel">Confirmar Borrado</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    ¿Estás seguro de que deseas borrar este jugador?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <form id="deleteForm" method="POST">
+                        <button type="submit" class="btn btn-danger">Borrar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Player Modal -->
+    <div class="modal fade" id="updatePlayerModal" tabindex="-1" role="dialog" aria-labelledby="updatePlayerLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updatePlayerLabel">Actualizar Jugador</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="updatePlayerForm" method="POST">
+                        <input type="hidden" id="updatePlayerId" name="updatePlayerId">
+                        <div class="form-group">
+                            <label for="playerName">Nombre:</label>
+                            <input type="text" class="form-control" id="playerName" name="playerName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="pwd">Contraseña:</label>
+                            <input type="password" class="form-control" id="pwd" name="pwd" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Player Modal -->
+<div class="modal fade" id="addPlayerModal" tabindex="-1" role="dialog" aria-labelledby="addPlayerLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addPlayerLabel">Agregar Jugador</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addPlayerForm" method="POST" action="{{ url_for('jugadores_bp.add_player') }}">
+                    <div class="form-group">
+                        <label for="newPlayerName">Nombre:</label>
+                        <input type="text" class="form-control" id="newPlayerName" name="playerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPwd">Contraseña:</label>
+                        <input type="password" class="form-control" id="newPwd" name="pwd" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Agregar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script>
+        // Handle the modal show event to set the form action dynamically
+        $('#confirmDeleteModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Button that triggered the modal
+            var id = button.data('id'); // Extract player ID from the button's data-id
+
+            // Set the form action to point to the delete route
+            var form = $('#deleteForm');
+            form.attr('action', '/jugadores/delete_player/' + id);  // Adjust the route as necessary
+        });
+
+        // Handle the modal show event to set the form values dynamically for update
+        $('#updatePlayerModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Button that triggered the modal
+            var id = button.data('id'); // Extract player ID
+            var nombre = button.data('nombre'); // Extract player name
+            var pwd = button.data('pwd'); // Extract player password
+
+            // Set the values in the form
+            $('#updatePlayerId').val(id);
+            $('#playerName').val(nombre);
+            $('#pwd').val(pwd); // Set the password
+
+            // Dynamically set the form action URL (you might need to adjust this)
+            $('#updatePlayerForm').attr('action', '/jugadores/update_player'); 
+        });
+    </script>
+</body>
+</html>
