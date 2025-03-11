@@ -1,0 +1,42 @@
+POST http://localhost:400/Users/crear
+content-type: application/json
+
+{
+    "nombre": "Juan",
+    "email": "juan@gmail.com",
+    "password": "1234"
+}
+#####
+
+GET http://localhost:400/Users/lista
+content-type: application/json
+
+####
+
+GET http://localhost:400/Users/busqueda/2
+content-type: application/json
+
+####
+ 
+PUT http://localhost:400/Users/actualizar/2
+content-type: application/json
+
+ {
+    "nombre": "Juan Updated",
+    "email": "juan.updated@gmail.com",
+    "password": "1234"
+}
+
+#####
+
+DELETE http://localhost:400/Users/eliminar/1
+content-type: application/json
+
+######
+POST http://localhost:400/Users/login
+content-type: application/json
+
+{
+    "email": "juan@gmail.com",
+    "password": "1234"
+}
