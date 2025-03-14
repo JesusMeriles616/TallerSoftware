@@ -1,24 +1,24 @@
-POST http://localhost:400/Users/crear
+POST http://localhost:2020/Users/crear
 content-type: application/json
 
 {
-    "nombre": "Juan",
+    "nombre": "carlos",
     "email": "juan@gmail.com",
     "password": "1234"
 }
 #####
 
-GET http://localhost:400/Users/lista
+GET http://localhost:2020/Users/lista
 content-type: application/json
 
 ####
 
-GET http://localhost:400/Users/busqueda/2
+GET http://localhost:2020/Users/busqueda/2
 content-type: application/json
 
 ####
  
-PUT http://localhost:400/Users/actualizar/2
+PUT http://localhost:2020/Users/actualizar/2
 content-type: application/json
 
  {
@@ -29,11 +29,11 @@ content-type: application/json
 
 #####
 
-DELETE http://localhost:400/Users/eliminar/1
+DELETE http://localhost:2020/Users/eliminar/1
 content-type: application/json
 
 ######
-POST http://localhost:400/Users/login
+POST http://localhost:2020/Users/login
 content-type: application/json
 
 {

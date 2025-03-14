@@ -16,6 +16,19 @@ public class user_service implements user_interface {
 
     @Override
     public void createUser(String nombre, String email, String password) {
+        // Comprobar si algún campo es nulo
+        if (nombre == null || email == null || password == null) {
+            throw new IllegalArgumentException("El nombre, email y contraseña son obligatorios.");
+        }
+
+        // Comprobar si el nombre ya existe
+        boolean nombreExists = users.stream()
+                .anyMatch(user -> user.getNombre().equals(nombre));
+
+        if (nombreExists) {
+            throw new IllegalArgumentException("El nombre de usuario ya está en uso.");
+        }
+
         User_dto user = new User_dto(n++, nombre, email, password);
         users.add(user);
     }
