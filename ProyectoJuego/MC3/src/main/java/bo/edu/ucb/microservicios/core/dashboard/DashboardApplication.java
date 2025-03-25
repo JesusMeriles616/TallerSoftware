@@ -1,4 +1,4 @@
-package bo.edu.ucb.microservicios.core.product;
+package bo.edu.ucb.microservicios.core.dashboard;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

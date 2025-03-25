@@ -1,4 +1,6 @@
-package bo.edu.ucb.microservicios.core.product.dto;
+package bo.edu.ucb.microservicios.core.dashboard.dto;
+
+import java.util.Date;
 
 public class PerformanceDTO {
 
@@ -8,7 +10,6 @@ public class PerformanceDTO {
     private int wrongAnswers;
     private Date date;
 
-    // Getters y Setters
     public String getChildId() {
         return childId;
     }

@@ -1,38 +1,35 @@
-package bo.edu.ucb.microservicios.core.product.service;
+package bo.edu.ucb.microservicios.core.dashboard.service;
 
-import com.ejemplo.dashboard.dto.PerformanceDTO;
-import com.ejemplo.dashboard.model.Performance;
-import com.ejemplo.dashboard.repository.PerformanceRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import bo.edu.ucb.microservicios.core.dashboard.dto.PerformanceDTO;
 import org.springframework.stereotype.Service;
-import java.util.Date;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PerformanceService {
 
-    @Autowired
-    private PerformanceRepository performanceRepository;
+    private final List<PerformanceDTO> performanceData = new ArrayList<>();
 
-    public Performance savePerformance(PerformanceDTO performanceDTO) {
-        Performance performance = new Performance();
-        performance.setChildId(performanceDTO.getChildId());
-        performance.setGameId(performanceDTO.getGameId());
-        performance.setCorrectAnswers(performanceDTO.getCorrectAnswers());
-        performance.setWrongAnswers(performanceDTO.getWrongAnswers());
-        performance.setDate(new Date());
-        return performanceRepository.save(performance);
+    public PerformanceDTO savePerformance(PerformanceDTO performanceDTO) {
+        performanceData.add(performanceDTO); // Simula el guardado
+        return performanceDTO;
     }
 
-    public List<Performance> getPerformanceByChildId(String childId) {
-        return performanceRepository.findByChildId(childId);
+    public List<PerformanceDTO> getPerformanceByChildId(String childId) {
+        return performanceData.stream()
+                .filter(performance -> performance.getChildId().equals(childId))
+                .collect(Collectors.toList());
     }
 
-    public List<Performance> getPerformanceByGameId(String gameId) {
-        return performanceRepository.findByGameId(gameId);
+    public List<PerformanceDTO> getPerformanceByGameId(String gameId) {
+        return performanceData.stream()
+                .filter(performance -> performance.getGameId().equals(gameId))
+                .collect(Collectors.toList());
     }
 
     public void deletePerformanceByChildId(String childId) {
-        performanceRepository.deleteByChildId(childId);
+        performanceData.removeIf(performance -> performance.getChildId().equals(childId)); // Simula la eliminación
     }
 }
