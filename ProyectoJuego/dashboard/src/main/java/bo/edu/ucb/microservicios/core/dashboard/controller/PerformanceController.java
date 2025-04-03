@@ -1,76 +1,80 @@
-package bo.edu.ucb.microservicios.core.dashboard.controller;
+package bo.edu.ucb.microservicios.core.dashboard.Controller;
 
-import bo.edu.ucb.microservicios.core.dashboard.dto.PerformanceDTO;
-import bo.edu.ucb.microservicios.core.dashboard.service.PerformanceService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.HttpStatus;
+import bo.edu.ucb.microservicios.core.dashboard.Entity.PerformanceEntity;
+import bo.edu.ucb.microservicios.core.dashboard.Repository.PerformanceRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/performance")
-@Tag(name = "Performance", description = "API para gestionar el rendimiento de los niños")
+@RequestMapping("/api/performance")
 public class PerformanceController {
 
-    private final PerformanceService performanceService;
-
-    public PerformanceController(PerformanceService performanceService) {
-        this.performanceService = performanceService;
-    }
+    @Autowired
+    private PerformanceRepository performanceRepository;
 
     @PostMapping
-    @Operation(summary = "Registrar datos de rendimiento")
-    public ResponseEntity<PerformanceDTO> savePerformance(@RequestBody PerformanceDTO performanceDTO) {
-        PerformanceDTO savedPerformance = performanceService.savePerformance(performanceDTO);
-        return ResponseEntity.ok(savedPerformance);
+    public ResponseEntity<PerformanceEntity> createPerformance(@RequestBody PerformanceEntity performance) {
+        performance.setDate(new Date());
+        return ResponseEntity.ok(performanceRepository.save(performance));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PerformanceEntity> getPerformanceById(@PathVariable String id) {
+        return performanceRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/child/{childId}")
-    @Operation(summary = "Obtener datos de rendimiento por niño")
-    public ResponseEntity<List<PerformanceDTO>> getPerformanceByChildId(@PathVariable String childId) {
-        List<PerformanceDTO> performances = performanceService.getPerformanceByChildId(childId);
-        if (performances.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(performances);
+    public ResponseEntity<List<PerformanceEntity>> getPerformanceByChildId(@PathVariable String childId) {
+        return ResponseEntity.ok(performanceRepository.findByChildId(childId));
     }
 
     @GetMapping("/game/{gameId}")
-    @Operation(summary = "Obtener datos de rendimiento por juego con información del juego")
-    public ResponseEntity<Map<String, Object>> getPerformanceByGameId(@PathVariable String gameId) {
-        Map<String, Object> response = performanceService.getPerformanceByGameId(gameId);
-        if (((List<?>) response.get("performances")).isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(response);
+    public ResponseEntity<List<PerformanceEntity>> getPerformanceByGameId(@PathVariable String gameId) {
+        return ResponseEntity.ok(performanceRepository.findByGameId(gameId));
     }
 
-    @GetMapping("/stats")
-    @Operation(summary = "Obtener estadísticas generales de rendimiento")
-    public ResponseEntity<Map<String, Object>> getPerformanceStats() {
-        Map<String, Object> stats = performanceService.getPerformanceStats();
-        return ResponseEntity.ok(stats);
+    @GetMapping("/child/{childId}/game/{gameId}")
+    public ResponseEntity<List<PerformanceEntity>> getPerformanceByChildAndGame(
+            @PathVariable String childId,
+            @PathVariable String gameId) {
+        return ResponseEntity.ok(performanceRepository.findByChildIdAndGameId(childId, gameId));
     }
 
-    @DeleteMapping("/child/{childId}")
-    @Operation(summary = "Eliminar datos de rendimiento por niño")
-    public ResponseEntity<Map<String, String>> deletePerformanceByChildId(@PathVariable String childId) {
-        boolean wasDeleted = performanceService.deletePerformanceByChildId(childId);
-        
-        if (wasDeleted) {
-            return ResponseEntity.ok(Map.of(
-                "status", "success",
-                "message", "Datos del niño " + childId + " eliminados exitosamente"
-            ));
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                "status", "error",
-                "message", "No se encontraron datos para el niño " + childId
-            ));
-        }
+    @GetMapping("/date-range")
+    public ResponseEntity<List<PerformanceEntity>> getPerformanceByDateRange(
+            @RequestParam Date startDate,
+            @RequestParam Date endDate) {
+        return ResponseEntity.ok(performanceRepository.findByDateBetween(startDate, endDate));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PerformanceEntity> updatePerformance(
+            @PathVariable String id,
+            @RequestBody PerformanceEntity performance) {
+        return performanceRepository.findById(id)
+                .map(existingPerformance -> {
+                    existingPerformance.setChildId(performance.getChildId());
+                    existingPerformance.setGameId(performance.getGameId());
+                    existingPerformance.setCorrectAnswers(performance.getCorrectAnswers());
+                    existingPerformance.setWrongAnswers(performance.getWrongAnswers());
+                    return ResponseEntity.ok(performanceRepository.save(existingPerformance));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePerformance(@PathVariable String id) {
+        return performanceRepository.findById(id)
+                .map(performance -> {
+                    performanceRepository.delete(performance);
+                    return ResponseEntity.ok().<Void>build();
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }

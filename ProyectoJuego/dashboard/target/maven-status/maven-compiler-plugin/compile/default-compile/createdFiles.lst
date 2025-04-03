@@ -1,0 +1,12 @@
+bo\edu\ucb\microservicios\core\dashboard\config\OpenA.class
+bo\edu\ucb\microservicios\core\dashboard\Entity\PerformanceEntity.class
+bo\edu\ucb\microservicios\core\dashboard\exception\GlobalExceptionHandler.class
+bo\edu\ucb\microservicios\core\dashboard\Repository\PerformanceRepository.class
+bo\edu\ucb\microservicios\core\dashboard\dto\PerformanceDTO.class
+bo\edu\ucb\microservicios\core\dashboard\service\PerformanceService$1.class
+bo\edu\ucb\microservicios\core\dashboard\Controller\PerformanceController.class
+bo\edu\ucb\microservicios\core\dashboard\service\PerformanceService.class
+bo\edu\ucb\microservicios\core\dashboard\exception\ResourceNotFoundException.class
+bo\edu\ucb\microservicios\core\dashboard\service\PerformanceService$2.class
+bo\edu\ucb\microservicios\core\dashboard\service\PerformanceService$3.class
+bo\edu\ucb\microservicios\core\dashboard\DashboardApplication.class
