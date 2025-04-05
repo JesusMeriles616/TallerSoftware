@@ -14,6 +14,7 @@ public interface PerformanceRepository extends JpaRepository<PerformanceEntity, 
     
     List<PerformanceEntity> findByGameId(String gameId);
     
+    
     List<PerformanceEntity> findByChildIdAndGameId(String childId, String gameId);
     
     List<PerformanceEntity> findByDateBetween(Date startDate, Date endDate);

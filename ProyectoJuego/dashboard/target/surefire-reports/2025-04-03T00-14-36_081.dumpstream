@@ -1,0 +1,5 @@
+# Created at 2025-04-03T00:14:36.588
+Boot Manifest-JAR contains absolute paths in classpath 'D:\taller\TallerSoftware\ProyectoJuego\dashboard\target\test-classes'
+Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
+'other' has different root
+
