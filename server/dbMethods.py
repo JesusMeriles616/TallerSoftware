@@ -1,15 +1,14 @@
 import mysql.connector
 from mysql.connector import Error
-
 class DataBaseMethod:
     @staticmethod
     def connect():
         try:
             connection = mysql.connector.connect(
                 host="localhost",    
-                port=41063,            
-                user="juan_pablo",
-                password="123456789",
+                port=3306,            
+                user="Jose",
+                password="1234",
                 database="color_blind"
             )
             if connection.is_connected():
