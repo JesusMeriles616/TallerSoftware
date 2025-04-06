@@ -3,7 +3,6 @@ from flasgger import Swagger, swag_from
 
 app = Flask(__name__)
 
-# Configuración de Swagger
 app.config['SWAGGER'] = {
     'title': 'API de Juego de Colores',
     'uiversion': 3,
@@ -13,6 +12,19 @@ swagger = Swagger(app)
 
 games = {}
 game_id = 1
+
+def validar_game_id(game_id_str):
+    """
+    Valida que el game_id sea un entero mayor o igual a cero.
+    Devuelve el game_id como entero si es válido, None si no lo es.
+    """
+    try:
+        game_id = int(game_id_str)
+        if game_id >= 0:
+            return game_id
+        return None
+    except (ValueError, TypeError):
+        return None
 
 @app.route('/start_game', methods=['POST'])
 @swag_from({
@@ -93,6 +105,14 @@ def start_game():
                 }
             }
         },
+        400: {
+            'description': 'Game ID inválido',
+            'examples': {
+                'application/json': {
+                    'error': 'Game ID must be a positive integer'
+                }
+            }
+        },
         404: {
             'description': 'Game ID no encontrado',
             'examples': {
@@ -104,8 +124,13 @@ def start_game():
     }
 })
 def play():
-    game_id = request.json.get("game_id")
+    game_id_input = request.json.get("game_id")
     user_input = request.json.get("color")
+    
+    # Validar game_id
+    game_id = validar_game_id(game_id_input)
+    if game_id is None:
+        return jsonify({"error": "Game ID must be a positive integer"}), 400
     
     if game_id not in games:
         return jsonify({"error": "Game ID not found"}), 404
@@ -147,6 +172,14 @@ def play():
                 }
             }
         },
+        400: {
+            'description': 'Game ID inválido',
+            'examples': {
+                'application/json': {
+                    'error': 'Game ID must be a positive integer'
+                }
+            }
+        },
         404: {
             'description': 'Game ID no encontrado',
             'examples': {
@@ -158,7 +191,13 @@ def play():
     }
 })
 def end_game():
-    game_id = request.json.get("game_id")
+    game_id_input = request.json.get("game_id")
+    
+    # Validar game_id
+    game_id = validar_game_id(game_id_input)
+    if game_id is None:
+        return jsonify({"error": "Game ID must be a positive integer"}), 400
+    
     if game_id in games:
         final_score = games.pop(game_id)["score"]
         return jsonify({"message": "Game ended", "final_score": final_score})
