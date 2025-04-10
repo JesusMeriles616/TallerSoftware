@@ -20,10 +20,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import bo.edu.ucb.microservicios.core.product.dto.UserDto;
 import bo.edu.ucb.microservicios.core.product.entity.User;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/v1/users")
 @CrossOrigin(origins = "*")
+@Tag(name = "User Management", description = "API endpoints for user management operations")
 public class UserApi {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserApi.class);
@@ -49,14 +57,27 @@ public class UserApi {
         return user;
     }
 
+    @Operation(summary = "Get all users", description = "Retrieves a list of all users in the system")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "List of users retrieved successfully",
+            content = @Content(schema = @Schema(implementation = User.class)))
+    })
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         LOGGER.info("Obteniendo lista de usuarios");
         return ResponseEntity.ok(users);
     }
 
+    @Operation(summary = "Get user by UID", description = "Retrieves a specific user by their UID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User found successfully",
+            content = @Content(schema = @Schema(implementation = User.class))),
+        @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @GetMapping("/{uid}")
-    public ResponseEntity<User> getUserByUid(@PathVariable String uid) {
+    public ResponseEntity<User> getUserByUid(
+            @Parameter(description = "UID of the user to retrieve", required = true)
+            @PathVariable String uid) {
         LOGGER.info("Buscando usuario con UID: {}", uid);
         return users.stream()
                 .filter(user -> user.getUid().equals(uid))
@@ -65,8 +86,15 @@ public class UserApi {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Operation(summary = "Create new user", description = "Creates a new user in the system")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User created successfully",
+            content = @Content(schema = @Schema(implementation = User.class)))
+    })
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody UserDto userDto) {
+    public ResponseEntity<User> createUser(
+            @Parameter(description = "User details for creation", required = true)
+            @RequestBody UserDto userDto) {
         LOGGER.info("Creando nuevo usuario");
         User user = new User();
         user.setUid(UUID.randomUUID().toString());
@@ -81,8 +109,18 @@ public class UserApi {
         return ResponseEntity.ok(user);
     }
 
+    @Operation(summary = "Update user", description = "Updates an existing user's information")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User updated successfully",
+            content = @Content(schema = @Schema(implementation = User.class))),
+        @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @PutMapping("/{uid}")
-    public ResponseEntity<User> updateUser(@PathVariable String uid, @RequestBody UserDto userDto) {
+    public ResponseEntity<User> updateUser(
+            @Parameter(description = "UID of the user to update", required = true)
+            @PathVariable String uid,
+            @Parameter(description = "Updated user details", required = true)
+            @RequestBody UserDto userDto) {
         LOGGER.info("Actualizando usuario con UID: {}", uid);
         return users.stream()
                 .filter(user -> user.getUid().equals(uid))
@@ -98,8 +136,15 @@ public class UserApi {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Operation(summary = "Delete user", description = "Deletes a user from the system")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User deleted successfully"),
+        @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @DeleteMapping("/{uid}")
-    public ResponseEntity<Void> deleteUser(@PathVariable String uid) {
+    public ResponseEntity<Void> deleteUser(
+            @Parameter(description = "UID of the user to delete", required = true)
+            @PathVariable String uid) {
         LOGGER.info("Eliminando usuario con UID: {}", uid);
         boolean removed = users.removeIf(user -> user.getUid().equals(uid));
         if (removed) {
