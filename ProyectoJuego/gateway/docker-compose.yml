@@ -43,9 +43,39 @@ services:
     networks:
       - app-network
 
+  game:
+    build:
+      context: ../game
+      dockerfile: Dockerfile
+    container_name: game_app
+    ports:
+      - "7001:7001"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka
+    depends_on:
+      - eureka
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  child:
+    build:
+      context: ../child
+      dockerfile: Dockerfile
+    container_name: child_app
+    ports:
+      - "7002:7002"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka
+    depends_on:
+      - eureka
+    restart: unless-stopped
+    networks:
+      - app-network
+
   gateway:
     build:
-      context: ../gateway
+      context: .
       dockerfile: Dockerfile
     container_name: gateway_app
     ports:
@@ -55,6 +85,8 @@ services:
     depends_on:
       - eureka
       - dashboard
+      - game
+      - child
     restart: unless-stopped
     networks:
       - app-network
@@ -64,4 +96,4 @@ networks:
     driver: bridge
 
 volumes:
-  mysql_data:
+  mysql_data: 
