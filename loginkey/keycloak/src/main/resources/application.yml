@@ -1,0 +1,67 @@
+server:
+  port: 6200
+spring:
+  application:
+    name: keycloak
+  profile:
+    active: dev
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/juegos_spring}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8080/realms/juegos_spring/protocol/openid-connect/certs}
+
+# Configuración JWT
+jwt:
+  auth:
+    converter:
+      resource-id: spring_juegos
+      principle-attribute: preferred_username
+      enable-cache: true
+      cache-ttl: 300
+# Logging
+logging:
+  level:
+    org:
+      keycloak: ${LOGGING_LEVEL_KEYCLOAK:DEBUG}
+    root: INFO
+# Keycloak Configuration
+keycloak:
+  auth-server-url: ${KEYCLOAK_AUTH_URL:http://localhost:8080/} # URL del servidor de Keycloak
+  realm: ${KEYCLOAK_REALM:juegos_spring} # Nombre del realm
+  resource: ${KEYCLOAK_CLIENT_ID:sspring_juegos} # Client ID (en este caso, admin-cli)
+  credentials:
+    secret: ${KEYCLOAK_CLIENT_SECRET:09Z2ZtgBszwVSkDDkPCjPB8Ezs1Ewfah} # Client Secret
+  use-resource-role-mappings: true
+  ssl-required: external
+  confidential-port: 0
+  admin:
+    username: ${KEYCLOAK_ADMIN_USER:admin} # Usuario de administración
+    password: ${KEYCLOAK_ADMIN_PASSWORD:admin} # Contraseña de administración
+  realm-master: master # Realm master (opcional, si necesitas interactuar con el realm master)
+  connection:
+    connect-timeout: 5000 # en ms
+    read-timeout: 30000 # en ms
+# Eureka Discovery
+
+# SpringDoc OpenAPI (Swagger)
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    url: /v3/api-docs
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
+    persist-authorization: true
+    filter: true
+    oauth:
+      client-id: ${KEYCLOAK_CLIENT_ID:spring_juegos}
+      client-secret: ${KEYCLOAK_CLIENT_SECRET:09Z2ZtgBszwVSkDDkPCjPB8Ezs1Ewfah}
+      realm: ${KEYCLOAK_REALM:juegos_spring}
+      app-name: Keycloak API
+      use-pkce-with-authorization-code-grant: true
+      scopes: openid,profile,email
