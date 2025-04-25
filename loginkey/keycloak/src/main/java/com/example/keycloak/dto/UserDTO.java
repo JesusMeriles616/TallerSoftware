@@ -36,8 +36,8 @@ public class UserDTO implements Serializable{
     private String password;
 
     @Schema(description = "Roles asignados",
-            example = "[\"CLIENTE\"]",
-            allowableValues = {"CLIENTE", "GERENTE", "COCINA", "CAMARERO", "INVENTARIO", "ENTREGA"})
+            example = "[\"ADMINISTRADOR\"]",
+            allowableValues = {"NIÑO", "ADMINISTRADOR", "PADRE"})
     private Set<RoleType> roles = new HashSet<>();
 
     @Schema(description = "Indica si el usuario está habilitado", example = "true", defaultValue = "true")

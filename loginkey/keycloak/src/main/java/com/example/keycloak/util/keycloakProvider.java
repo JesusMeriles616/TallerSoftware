@@ -92,27 +92,33 @@ public class keycloakProvider {
                 "Keycloak user client"
         );
     }
-    /***
-     * Crea una instancia de Keycloak para un usuario específico.
-     * @param username Nombre de usuario
-     * @param password Contraseña del usuario
-     * @return Instancia de Keycloak configurada para el usuario
-     * @throws IllegalArgumentException Si username o password son vacíos
-     */
     public Keycloak getUserKeycloakInstance(String username, String password) {
         if (StringUtils.isBlank(username) || StringUtils.isBlank(password)) {
             throw new IllegalArgumentException("Username and password cannot be blank");
         }
 
-        return createClient(
-                keycloakConfig.getRealm(),
-                keycloakConfig.getResource(),
-                keycloakConfig.getCredentials().getSecret(),
-                OAuth2Constants.PASSWORD,
-                username,
-                password,
-                "User-specific Keycloak client for " + username
-        );
+        log.info("Creating Keycloak instance for user: {}", username);
+
+        try {
+            ResteasyClient client = new ResteasyClientBuilderImpl()
+                    .connectTimeout(keycloakConfig.getConnection().getConnectTimeout(), TimeUnit.MILLISECONDS)
+                    .readTimeout(keycloakConfig.getConnection().getReadTimeout(), TimeUnit.MILLISECONDS)
+                    .build();
+
+            return KeycloakBuilder.builder()
+                    .serverUrl(keycloakConfig.getAuthServerUrl())
+                    .realm(keycloakConfig.getRealm())
+                    .clientId(keycloakConfig.getResource())
+                    .clientSecret(keycloakConfig.getCredentials().getSecret())
+                    .username(username)
+                    .password(password)
+                    .grantType(OAuth2Constants.PASSWORD)
+                    .resteasyClient(client)
+                    .build();
+        } catch (Exception e) {
+            log.error("Failed to authenticate user: {}", username, e);
+            throw new KeycloakServiceException("Authentication failed for user: " + username, e);
+        }
     }
     /**
      * Obtiene una instancia de Keycloak configurada para usar un refresh token

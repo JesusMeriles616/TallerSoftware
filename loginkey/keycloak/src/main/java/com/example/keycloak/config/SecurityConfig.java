@@ -33,7 +33,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
-            "/auth/**", "/users/register", "/swagger-ui.html", "/swagger-ui/**",
+            "/users/login","/auth/**", "/users/register", "/swagger-ui.html", "/swagger-ui/**",
             "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/actuator/health"
     };
 
@@ -58,8 +58,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth.requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, PROFILE_ENDPOINTS).hasAnyRole(ROLES_COMUNES)
                         .requestMatchers(HttpMethod.PUT, PROFILE_ENDPOINTS).hasAnyRole(ROLES_COMUNES)
-                        .requestMatchers(HttpMethod.DELETE, PROFILE_ENDPOINTS).hasAnyRole("CLIENTE", "GERENTE")
-                        .requestMatchers(GERENTE_ENDPOINTS).hasRole("GERENTE")
+                        .requestMatchers(HttpMethod.DELETE, PROFILE_ENDPOINTS).hasAnyRole("NIÑO", "PADRE")
+                        .requestMatchers(GERENTE_ENDPOINTS).hasRole("PADRE")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(e->e.accessDeniedHandler(accessDeniedHandler()))

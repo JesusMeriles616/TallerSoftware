@@ -1,5 +1,6 @@
 package com.example.keycloak.services;
 
+import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
@@ -18,12 +19,16 @@ import org.springframework.stereotype.Service;
 import com.example.keycloak.dto.AuthResponse;
 import com.example.keycloak.dto.UserCreateDTO;
 import com.example.keycloak.dto.UserDTO;
+import com.example.keycloak.emu.RoleType;
 import com.example.keycloak.exception.validacion;
 import com.example.keycloak.util.KeycloakServiceException;
 import com.example.keycloak.util.keycloakProvider;
 
+import io.micrometer.common.util.StringUtils;
+
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 @Slf4j
 @Service
@@ -129,28 +134,65 @@ public class keycloakservice implements keycloakinterface {
         }
     }
 
-    @Override
-    public String createUser(UserCreateDTO userCreateDTO) {
-        validacion.validateUserCreateDTO(userCreateDTO);
-        UsersResource usersResource = keycloakProvider.getUserResource();
-        // Convertir UserCreateDTO a UserDTO
-        UserDTO userDTO = keycloakconverter.todto(userCreateDTO);
-        String username = userDTO.getUsername();
-        // Verificar si el usuario ya existe antes de intentar crearlo
-        if (userExists(usersResource, username)) {
-            log.warn("User creation failed - already exists: {}", username);
-            throw new KeycloakServiceException("User already exists");
-        }
-        // Crear la representación del usuario en Keycloak
-        UserRepresentation userRepresentation = createUserRepresentation(userDTO);
-        Response response = usersResource.create(userRepresentation);
-        validacion.validateUserCreation(response);
-
-        String userId = findUserByUsername(userDTO.getUsername()).getId();
-        configureUser(userId, userDTO);
-        log.info("User created successfully: {}", userDTO.getUsername());
-        return userId;
+@Override
+public String createUser(UserCreateDTO userCreateDTO) {
+    validacion.validateUserCreateDTO(userCreateDTO);
+    UsersResource usersResource = keycloakProvider.getUserResource();
+    
+    // Convertir UserCreateDTO a UserDTO
+    UserDTO userDTO = keycloakconverter.toUserDTO(userCreateDTO);
+    String username = userDTO.getUsername();
+    
+    // Verificar si el usuario ya existe antes de intentar crearlo
+    if (userExists(usersResource, username)) {
+        log.warn("User creation failed - already exists: {}", username);
+        throw new KeycloakServiceException("User already exists");
     }
+    
+    // Crear la representación del usuario en Keycloak
+    UserRepresentation userRepresentation = createUserRepresentation(userDTO);
+    Response response = usersResource.create(userRepresentation);
+    validacion.validateUserCreation(response);
+    
+    // Obtener el ID del usuario creado
+    String userId = findUserByUsername(userDTO.getUsername()).getId();
+    
+    // Asignar roles al usuario
+    assignUserRoles(userId, userCreateDTO.getRoles());
+    
+    log.info("User created successfully: {}", userDTO.getUsername());
+    return userId;
+}
+
+/**
+ * Asigna roles a un usuario.
+ * @param userId ID del usuario
+ * @param roles Conjunto de roles a asignar
+ */
+private void assignUserRoles(String userId, Set<RoleType> roles) {
+    List<RoleRepresentation> realmRoles = roles.stream()
+            .map(this::getRoleRepresentation)
+            .collect(Collectors.toList());
+
+    keycloakProvider.getRealmResource()
+            .users()
+            .get(userId)
+            .roles()
+            .realmLevel()
+            .add(realmRoles);
+}
+
+/**
+ * Obtiene la representación de un rol en Keycloak.
+ * @param role Tipo de rol a obtener
+ * @return Representación del rol en Keycloak
+ */
+private RoleRepresentation getRoleRepresentation(RoleType role) {
+    return keycloakProvider.getRealmResource()
+            .roles()
+            .get(role.getRealmRole().getRoleName())
+            .toRepresentation();
+}
     @Override
     public void deleteUser(String userId) {
         validacion.validateNotBlank(userId, validacion.USER_ID_BLANK_MSG);
@@ -221,16 +263,89 @@ public class keycloakservice implements keycloakinterface {
         }
     }
     @Override
-    public AuthResponse login(String username, String password) {
-        validacion.validateCredentials(username, password);
-        // Obtener tokens usando el flujo de password grant
+public AuthResponse login(String username, String password) {
+    try {
+        // Validación básica
+        validateCredentials(username, password);
+        
+        // Verificar si el usuario existe antes de intentar login
+        UsersResource usersResource = keycloakProvider.getUserResource();
+        List<UserRepresentation> users = usersResource.search(username);
+        
+        if (users.isEmpty()) {
+            throw new KeycloakServiceException("User not found");
+        }
+        
+        UserRepresentation user = users.get(0);
+        if (!user.isEnabled()) {
+            throw new KeycloakServiceException("User is disabled");
+        }
+
+        // Obtener tokens
+        Keycloak keycloakInstance = keycloakProvider.getUserKeycloakInstance(username, password);
+        AccessTokenResponse tokenResponse;
+        
         try {
-            Keycloak keycloakInstance = keycloakProvider.getUserKeycloakInstance(username, password);
-            AccessTokenResponse tokenResponse = keycloakInstance.tokenManager().getAccessToken();
-            return buildAuthResponse(tokenResponse);
-        } catch (Exception e) {
-            log.error("Login failed for user: {}", username);
-            throw new KeycloakServiceException("Invalid credentials", e);
+            tokenResponse = keycloakInstance.tokenManager().getAccessToken();
+        } catch (NotAuthorizedException e) {
+            // Error específico de credenciales inválidas
+            throw new KeycloakServiceException("Invalid username or password", e);
+        }
+
+        // Validar respuesta
+        validateTokenResponse(tokenResponse);
+        
+        return buildAuthResponse(tokenResponse);
+    } catch (KeycloakServiceException e) {
+        throw e; // Re-lanzar excepciones conocidas
+    } catch (Exception e) {
+        log.error("Unexpected error during login for user: {}", username, e);
+        throw new KeycloakServiceException("Login failed: " + e.getMessage());
+    }
+}
+    /******** VALIDACIONES ********/
+    /**
+     * Valida que un string no sea nulo o vacío.
+     * @param value String a validar
+     * @param message Mensaje de error si la validación falla
+     * @throws KeycloakServiceException Si el valor es nulo o vacío
+     */
+    private void validateNotBlank(String value, String message) {
+        if (StringUtils.isBlank(value)) {
+            throw new KeycloakServiceException(message);
+        }
+    }
+
+    /**
+     * Valida que el DTO de usuario sea válido.
+     * @param userDTO DTO a validar
+     * @throws KeycloakServiceException Si el DTO es inválido
+     */
+    private void validateUserDTO(UserDTO userDTO) {
+        if (userDTO == null) {
+            throw new KeycloakServiceException("UserDTO cannot be null");
+        }
+        validateNotBlank(userDTO.getUsername(), "Username is required");
+    }
+
+    /**
+     * Validacion las credenciales de autenticación.
+     * @param username Nombre de usuario
+     * @param password Contraseña
+     * @throws KeycloakServiceException Si las credenciales son inválidas
+     */
+    private void validateCredentials(String username, String password) {
+        validateNotBlank(username, "Username is required");
+        validateNotBlank(password, "Password is required");
+    }
+    /**
+     * Valida que la respuesta de autenticación contenga tokens válidos.
+     * @param tokenResponse Respuesta de autenticación
+     * @throws KeycloakServiceException Si los tokens son inválidos
+     */
+    private void validateTokenResponse(AccessTokenResponse tokenResponse) {
+        if (tokenResponse == null || tokenResponse.getToken() == null) {
+            throw new KeycloakServiceException("Invalid authentication response");
         }
     }
 

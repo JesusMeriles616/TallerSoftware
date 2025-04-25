@@ -30,8 +30,8 @@ public class UserCreateDTO {
     @Schema(description = "Contraseña", example = "Pass123!", required = true)
     private String password;
     @Schema(description = "Roles asignados",
-            example = "[\"CLIENTE\"]",
-            allowableValues = {"CLIENTE", "GERENTE", "COCINA", "CAMARERO", "INVENTARIO", "ENTREGA"})
+            example = "[\"ADMINISTRADOR\"]",
+            allowableValues = {"NIÑO", "ADMINISTRADOR", "PADRE"})
     private Set<RoleType> roles = new HashSet<>();
     @Schema(description = "Indica si el usuario está habilitado", example = "true", defaultValue = "true")
     private boolean enabled = true;
