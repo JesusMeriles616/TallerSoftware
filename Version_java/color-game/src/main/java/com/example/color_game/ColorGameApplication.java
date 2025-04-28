@@ -1,18 +1,28 @@
 package com.example.colorgame;
-import com.example.colorgame.model.Game;
-import com.example.colorgame.model.requests.*;
-import com.example.colorgame.model.responses.*;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
-import io.swagger.v3.oas.annotations.*;
-import io.swagger.v3.oas.annotations.media.*;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.colorgame.model.Game;
+import com.example.colorgame.model.requests.EndGameRequest;
+import com.example.colorgame.model.requests.PlayRequest;
+import com.example.colorgame.model.requests.StartGameRequest;
+import com.example.colorgame.model.responses.EndGameResponse;
+import com.example.colorgame.model.responses.ErrorResponse;
+import com.example.colorgame.model.responses.PlayResponse;
+import com.example.colorgame.model.responses.StartGameResponse;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @SpringBootApplication
 @RestController
@@ -34,7 +44,8 @@ public class ColorGameApplication {
                 responseCode = "200",
                 description = "Juego iniciado correctamente",
                 content = @Content(schema = @Schema(implementation = StartGameResponse.class))
-        })
+    )})
+        
     public ResponseEntity<StartGameResponse> startGame(
             @RequestBody @Schema(description = "Datos de inicio del juego") StartGameRequest request) {
         
