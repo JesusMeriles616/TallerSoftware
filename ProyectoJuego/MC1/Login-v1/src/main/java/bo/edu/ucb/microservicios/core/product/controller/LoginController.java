@@ -1,5 +1,5 @@
-package bo.edu.ucb.microservicios.core.product.controller;
 
+<<<<<<< Updated upstream
 import org.keycloak.representations.AccessTokenResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,3 +101,5 @@ public class LoginController {
     }
 
 }
+=======
+>>>>>>> Stashed changes

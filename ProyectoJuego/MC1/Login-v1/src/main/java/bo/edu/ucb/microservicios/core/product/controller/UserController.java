@@ -104,9 +104,52 @@ public class UserController {
         @ApiResponse(responseCode = "400", description = "Invalid email or password format")
     })
     @PostMapping
+<<<<<<< Updated upstream
     public ResponseEntity<?> createUser(
             @Parameter(description = "User details for creation", required = true)
             @RequestBody UserDto userDto) {
+=======
+    public ResponseEntity<User> createUser(@RequestBody UserDto userDto) {
+        
+        if (userDto.getNombre() == null || userDto.getNombre().trim().isEmpty()) {
+            LOGGER.error("El nombre es requerido");
+            throw new IllegalArgumentException("El nombre es requerido");
+        }
+        if (userDto.getApellido() == null || userDto.getApellido().trim().isEmpty()) {
+            LOGGER.error("El apellido es requerido"); 
+            throw new IllegalArgumentException("El apellido es requerido");
+        }
+        if (userDto.getCorreo() == null || userDto.getCorreo().trim().isEmpty()) {
+            LOGGER.error("El correo es requerido");
+            throw new IllegalArgumentException("El correo es requerido");
+        }
+        if (userDto.getPassword() == null || userDto.getPassword().trim().isEmpty()) {
+            LOGGER.error("La contraseña es requerida");
+            throw new IllegalArgumentException("La contraseña es requerida");
+        }
+   
+        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        if (!userDto.getCorreo().matches(emailRegex)) {
+            LOGGER.error("Formato de correo electrónico inválido");
+            throw new IllegalArgumentException("Formato de correo electrónico inválido");
+        }
+
+        if (users.stream().anyMatch(u -> u.getCorreo().equals(userDto.getCorreo()))) {
+            LOGGER.error("El correo ya está registrado");
+            throw new IllegalArgumentException("El correo ya está registrado");
+        }
+
+        if (userDto.getPassword().length() < 8) {
+            LOGGER.error("La contraseña debe tener al menos 8 caracteres");
+            throw new IllegalArgumentException("La contraseña debe tener al menos 8 caracteres");
+        }
+
+        String passwordRegex = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$";
+        if (!userDto.getPassword().matches(passwordRegex)) {
+            LOGGER.error("La contraseña debe contener al menos una letra mayúscula, una minúscula y un número");
+            throw new IllegalArgumentException("La contraseña debe contener al menos una letra mayúscula, una minúscula y un número");
+        }
+>>>>>>> Stashed changes
         LOGGER.info("Creando nuevo usuario");
 
         if (!isValidEmail(userDto.getCorreo())) {
