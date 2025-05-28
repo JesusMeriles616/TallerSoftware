@@ -1,0 +1,1 @@
+ALTER TABLE juegos DROP COLUMN descripcion; 

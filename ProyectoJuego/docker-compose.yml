@@ -2,18 +2,18 @@ version: "3.8"
 
 services:
   mysql:
-    image: mysql:latest
+    image: mysql:8.0
     container_name: mysql_db
     environment:
-      MYSQL_ROOT_PASSWORD: abc123
-      MYSQL_DATABASE: Dashboard_db
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: microservicios
     ports:
-      - "3400:3306"
+      - "3306:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
     restart: unless-stopped
     networks:
-      - app-network
+      - microservices-network
 
   eureka-server:
     build:
@@ -26,7 +26,7 @@ services:
       - EUREKA_SERVER_PASSWORD=admin123
     restart: unless-stopped
     networks:
-      - app-network
+      - microservices-network
 
   dashboard:
     build:
@@ -36,35 +36,39 @@ services:
     ports:
       - "7004:7004"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/Dashboard_db?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/microservicios
       - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=abc123
+      - SPRING_DATASOURCE_PASSWORD=root
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://admin:admin123@eureka-server:8761/eureka/
+      - SERVER_PORT=7004
     depends_on:
       - mysql
       - eureka-server
     restart: unless-stopped
     networks:
-      - app-network
+      - microservices-network
 
- # mc1:
-  #  build:
-  #    context: ./MC1
-  #    dockerfile: Login-v1/Dockerfile
-  #  container_name: mc1_app
-  #  ports:
-  #    - "7001:7001"
-  #  environment:
-  #    - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://admin:admin123@eureka-server:8761/eureka/
-  #  depends_on:
-  #    - eureka-server
-  #  restart: unless-stopped
-  #  networks:
-  #    - app-network
+  juego:
+    build: ./juego
+    container_name: juego_app
+    ports:
+      - "7001:7001"
+    depends_on:
+      - eureka-server
+      - mysql
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/microservicios
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://admin:admin123@eureka-server:8761/eureka/
+      - SERVER_PORT=7001
+    restart: unless-stopped
+    networks:
+      - microservices-network
 
 networks:
-  app-network:
+  microservices-network:
     driver: bridge
 
 volumes:
-  mysql_data:
+  mysql-data:

@@ -1,4 +1,4 @@
-package bo.edu.ucb.microservicios.core.dashboard.Controller;
+package bo.edu.ucb.microservicios.core.dashboard.controller;
 
 import java.util.Date;
 import java.util.List;

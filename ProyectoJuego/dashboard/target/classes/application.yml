@@ -1,10 +1,10 @@
 spring:
   application:
-    name: dashboard
+    name: dashboard-service
   datasource:
-    url: jdbc:mysql://localhost:3333/Dashboard_db?createDatabaseIfNotExist=true
-    username: root
-    password: abc123
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3333}/${MYSQL_DATABASE:Dashboard_db}?createDatabaseIfNotExist=true
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:abc123}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -12,9 +12,29 @@ spring:
     show-sql: true
     properties:
       hibernate:
-        format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
     database-platform: org.hibernate.dialect.MySQLDialect
 
 server:
   port: 7004
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://admin:admin123@localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
